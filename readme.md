@@ -6,13 +6,17 @@ Build and deploy Oracle UCM components directly from maven.
 Installing
 ==========
 
-Until this is up on Maven central, you need to manually install into your repository:
+Until this is up on Maven central, you need to manually install into your repository by downloading the zip on the downloads page and running this:
 
-`mvn install:install-file -DgroupId=org.ucmtwine -DartifactId=ucm-maven-plugin -Dpackaging=jar -Dversion=1.0.0-SNAPSHOT -Dfile=ucm-maven-plugin-1.0.0-SNAPSHOT.jar -DpomFile=pom.xml`
+```
+mvn install:install-file -DgroupId=org.ucmtwine -DartifactId=ucm-maven-plugin -Dpackaging=jar -Dversion=1.0.0-SNAPSHOT -Dfile=ucm-maven-plugin-1.0.0-SNAPSHOT.jar -DpomFile=pom.xml
+```
 
 You also need [RIDC](http://www.oracle.com/technetwork/middleware/webcenter/content/downloads/index.html) 11.1.1 in your repository which you can install like so:
 
-`mvn install:install-file -DgroupId=oracle-ucm -DartifactId=ridc -Dpackaging=jar -Dversion=11.1.1 -Dfile=oracle.ucm.ridc-11.1.1.jar -DgeneratePom=true`
+```
+mvn install:install-file -DgroupId=oracle-ucm -DartifactId=ridc -Dpackaging=jar -Dversion=11.1.1 -Dfile=oracle.ucm.ridc-11.1.1.jar -DgeneratePom=true
+```
 
 Usage
 =====
