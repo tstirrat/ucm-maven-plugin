@@ -20,7 +20,6 @@ import oracle.stellent.ridc.model.DataResultSet;
 import oracle.stellent.ridc.model.impl.DataFactoryImpl;
 import oracle.stellent.ridc.model.serialize.HdaBinderSerializer;
 
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
@@ -29,7 +28,7 @@ import org.apache.maven.plugin.MojoFailureException;
  * 
  * @goal build
  */
-public class BuildComponent extends AbstractMojo {
+public class BuildComponent extends AbstractComponentMojo {
 
   private static final int BUFFER = 2048;
 
@@ -44,19 +43,9 @@ public class BuildComponent extends AbstractMojo {
    * A filter of file and directory names to exclude when packaging the
    * component.
    * 
-   * @parameter default="\.svn|\.git|\._.*|\.DS_Store|thumbs\.db|lockwait\.dat"
+   * @parameter default="\.svn|\.git|\._.*|\.DS_Store|thumbs\.db|lockwait\. dat"
    */
   private String excludeFiles;
-
-  /**
-   * Name of the component.
-   * 
-   * Determines the name of the zip file. Can be specified or will auto detect
-   * from first component found in manifest.hda
-   * 
-   * @parameter
-   */
-  private String componentName;
 
   public void execute() throws MojoExecutionException, MojoFailureException {
 

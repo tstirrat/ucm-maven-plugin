@@ -16,8 +16,6 @@ package org.ucmtwine.maven.plugin;
  * limitations under the License.
  */
 
-import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 
 import oracle.stellent.ridc.IdcClient;
@@ -35,38 +33,15 @@ import org.apache.maven.plugin.MojoExecutionException;
  * @goal deploy
  * @execute goal="build"
  */
-public class DeployComponent extends AbstractUCMServerAwareMojo {
-
-  /**
-   * Name of the component
-   * 
-   * @parameter
-   */
-  private String componentName;
-
-  /**
-   * The component zip path, relative to the root of the project.
-   * 
-   * @parameter expression="${project.basedir}/${componentZip}" default=""
-   */
-  private File componentZip;
-
-  /**
-   * The project base dir.
-   * 
-   * @parameter expression="${project.basedir}"
-   * @required
-   */
-  private File baseDir;
+public class DeployComponent extends AbstractServerAwareMojo {
 
   public void execute() throws MojoExecutionException {
 
     IdcServerDefinition server = getSelectedServer();
 
     // if not supplied, find the component zip in the project folder
-    determineComponentZip();
-
     determineComponentName();
+    determineComponentZip();
 
     if (componentZip == null) {
       throw new MojoExecutionException("Unable to determine appropriate component zip file from root project folder.");
@@ -126,54 +101,6 @@ public class DeployComponent extends AbstractUCMServerAwareMojo {
 
     } catch (IdcClientException e) {
       throw new MojoExecutionException(e.getMessage());
-    }
-  }
-
-  /**
-   * Find an appropriate zip file to use as the componentZip
-   */
-  private void determineComponentName() {
-    if (componentName == null || componentName.length() == 0) {
-      if (componentZip != null) {
-        componentName = componentZip.getName().replaceAll(".zip", "");
-      }
-    }
-
-  }
-
-  private void determineComponentZip() {
-
-    if (componentZip == null || !componentZip.exists()
-        || (componentZip.exists() && !componentZip.getName().endsWith(".zip"))) {
-
-      // clear the zip
-      componentZip = null;
-
-      // find all .zip files in the root folder
-      File zipFiles[] = baseDir.listFiles(new FilenameFilter() {
-        public boolean accept(File folder, String name) {
-          return name.endsWith(".zip");
-        }
-      });
-
-      for (File f : zipFiles) {
-        // <componentName>.zip takes priority
-        if (componentName != null && f.getName().replaceAll(".zip", "").equalsIgnoreCase(componentName)) {
-          componentZip = f;
-          break;
-        }
-
-        // otherwise choose any zip, taking blah.zip over manifest.zip if it
-        // exists.
-        if (f.getName().equalsIgnoreCase("manifest.zip") && componentZip == null) {
-          // use manifest.zip if no other zip has been found
-          componentZip = f;
-
-        } else {
-          // use any other zip
-          componentZip = f;
-        }
-      }
     }
   }
 }

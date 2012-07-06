@@ -2,14 +2,13 @@ package org.ucmtwine.maven.plugin;
 
 import java.util.List;
 
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * Extend this if you need your goal to be aware of the servers config and
  * interpret the command line argument to select one of the defined servers.
  */
-abstract class AbstractUCMServerAwareMojo extends AbstractMojo {
+abstract class AbstractServerAwareMojo extends AbstractComponentMojo {
 
   /**
    * Content server definitions
