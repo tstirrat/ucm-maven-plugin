@@ -1,23 +1,41 @@
-ucm-maven-plugin
+Maven UCM Plugin
 ================
 
-Build and deploy Oracle UCM components directly from maven.
+Build, deploy and manage Oracle UCM components directly from maven.
 
-Usage
------
+Commands
+--------
 
-Include the plugin in your project's pom.xml and configure your servers:
+### build
+
+`mvn ucm:build`
+
+Builds a component zip file into the current folder.
+
+### deploy
+
+`mvn ucm:deploy -Dserver=dev`
+
+Builds and deploys the component zip to the server id in your configuration. If no server is specified, the first server defined is used.
+
+### classpath
+
+`mvn ucm:classpath`
+
+Updates your component .hda classpath to reflect all maven depencies. Defaults to using the `$COMPONENT_DIR/lib/` folder, but the lib folder can be configured with `<libFolder>` config.
+
+Configuration
+-------------
+
+In your project's pom.xml:
 
 ```xml
 <build>
-  <!-- ... -->
   <plugins>
-    <!-- ... -->
     <plugin>
       <groupId>org.ucmtwine</groupId>
       <artifactId>ucm-maven-plugin</artifactId>
       <version>1.0.0-SNAPSHOT</version>
-      <configuration>
         <servers>
           <server>
             <id>dev</id>
@@ -36,20 +54,22 @@ Include the plugin in your project's pom.xml and configure your servers:
     </plugin>
 ```
 
-### build a component
+Optional parameters (defaults shown)
 
-`mvn ucm:build`
+```xml
+      <configuration>
+        <!-- for ucm:classpath -->
+        <libFolder>lib</libFolder>
+        <includeScope>runtime</includeScope>
+        <excludeScope>provided</excludeScope>
+        <!-- for ucm:deploy or ucm:build -->
+        <componentName></componentName><!-- Overrides componentName, autodetected by default -->
+        <componentZip></componentZip><!-- Overrides zip, defaults to <componentName>.zip -->
+      </configuration>
+```
 
-Builds a component zip file into the current folder.
-
-### deploy a component
-
-`mvn ucm:deploy -Dserver=dev`
-
-Builds and deploys the component zip to the server id in your configuration. If no server is specified, the first server defined is used.
-
-Installing
-----------
+Installing the plugin
+---------------------
 
 Until this is up on Maven central, you need to install into your local repository using `mvn`.
 
@@ -74,11 +94,12 @@ Until this is up on Maven central, you need to install into your local repositor
 Planned Features for 1.0
 ------------------------
 
-### classpath
+### update-version
 
-`mvn ucm:classpath`
+`mvn ucm:update-version`
 
-This will update your component's classpath directive with your maven dependencies. It will run before every build and keep your dependencies up to date.
+This will update your component's version to reflect your maven project version.
+
 
 License (MIT)
 -------------
