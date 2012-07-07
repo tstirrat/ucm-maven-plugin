@@ -3,38 +3,6 @@ ucm-maven-plugin
 
 Build and deploy Oracle UCM components directly from maven.
 
-Installing
-----------
-
-Until this is up on Maven central, you need to install into your local repository using the installer on the Downloads tab.
-
-*Requires Maven on your PATH*
-
-Mac/Linux:
-
-```
-# unzip the zip file
-cd ucm-maven-plugin-1.0-SNAPSHOT/
-chmod +x install.sh
-./install.sh
-```
-
-Windows, just run `install.bat`
-
-Or manually with `mvn`
-
-```
-mvn install:install-file -DgroupId=org.ucmtwine -DartifactId=ucm-maven-plugin -Dpackaging=jar -Dversion=1.0.0-SNAPSHOT -Dfile=ucm-maven-plugin-1.0.0-SNAPSHOT.jar -DpomFile=pom.xml
-```
-
-You also need [RIDC](http://www.oracle.com/technetwork/middleware/webcenter/content/downloads/index.html) 11.1.1 in your repository which you can install like so:
-
-There is an included installer: `install_ridc.bat` or `install_ridc.sh`, or you can do it manually:
-
-```
-mvn install:install-file -DgroupId=oracle-ucm -DartifactId=ridc -Dpackaging=jar -Dversion=11.1.1 -Dfile=oracle.ucm.ridc-11.1.1.jar -DgeneratePom=true
-```
-
 Usage
 -----
 
@@ -79,6 +47,29 @@ Builds a component zip file into the current folder.
 `mvn ucm:deploy -Dserver=dev`
 
 Builds and deploys the component zip to the server id in your configuration. If no server is specified, the first server defined is used.
+
+Installing
+----------
+
+Until this is up on Maven central, you need to install into your local repository using `mvn`.
+
+*Requires Maven on your PATH*
+
+1. Download [RIDC](http://www.oracle.com/technetwork/middleware/webcenter/content/downloads/index.html) 11.1.1
+1. Install RIDC into your local maven repo
+
+  ```
+  mvn install:install-file -DgroupId=oracle-ucm -DartifactId=ridc -Dpackaging=jar -Dversion=11.1.1 -Dfile=oracle.ucm.ridc-11.1.1.jar -DgeneratePom=true
+  ```
+
+1. Download ucm-maven-plugin-1.0.0-SNAPSHOT.jar from the downloads section
+1. Download the pom.xml from github source
+1. Install with Maven
+
+  ```
+  mvn install:install-file -DgroupId=org.ucmtwine -DartifactId=ucm-maven-plugin -Dpackaging=jar -Dversion=1.0.0-SNAPSHOT -Dfile=ucm-maven-plugin-1.0.0-SNAPSHOT.jar -DpomFile=pom.xml
+  ```
+
 
 Planned Features for 1.0
 ------------------------
