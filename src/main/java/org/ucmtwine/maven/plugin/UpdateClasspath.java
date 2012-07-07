@@ -1,6 +1,11 @@
 package org.ucmtwine.maven.plugin;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
@@ -154,6 +159,16 @@ public class UpdateClasspath extends AbstractComponentMojo {
       e.printStackTrace();
     }
 
+    writeClassPath(classPathItems);
+  }
+
+  /**
+   * Writes the classpath to the hda file.
+   * 
+   * @param classPathItems
+   * @throws MojoExecutionException
+   */
+  private void writeClassPath(SortedSet<String> classPathItems) throws MojoExecutionException {
     StringBuilder sb = new StringBuilder();
 
     for (Iterator<String> i = classPathItems.iterator(); i.hasNext();) {
@@ -161,6 +176,55 @@ public class UpdateClasspath extends AbstractComponentMojo {
     }
 
     getLog().info("New classpath: " + sb.toString());
+
+    File hdaFile = new File(componentName + ".hda");
+
+    if (!hdaFile.exists()) {
+      throw new MojoExecutionException("Hda file does not exist: " + hdaFile.toString());
+    }
+
+    try {
+      replaceClassPath(sb.toString(), hdaFile);
+
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
+
+  private void replaceClassPath(String newClassPath, File hdaFile) throws IOException, MojoExecutionException {
+
+    File tempFile = new File("temp.hda");
+
+    BufferedReader reader = new BufferedReader(new FileReader(hdaFile));
+    PrintWriter writer = new PrintWriter(new FileWriter(tempFile, false));
+    String line = null;
+
+    while ((line = reader.readLine()) != null) {
+      if (line.startsWith("classpath=")) {
+        writer.println("classpath=" + newClassPath);
+      } else {
+        writer.println(line);
+      }
+    }
+
+    reader.close();
+    writer.flush();
+    writer.close();
+
+    File oldFile = new File("old.hda");
+
+    if (oldFile.exists()) {
+      oldFile.delete();
+    }
+
+    if (!hdaFile.renameTo(oldFile)) {
+      throw new MojoExecutionException("Unable to rename " + hdaFile.getName() + " to " + oldFile.getName());
+    }
+
+    if (!tempFile.renameTo(hdaFile)) {
+      throw new MojoExecutionException("Unable to rename " + tempFile.getName() + " to " + hdaFile.getName());
+    }
   }
 
   private SortedSet<String> getExistingClassPath() throws MojoExecutionException {
@@ -172,7 +236,7 @@ public class UpdateClasspath extends AbstractComponentMojo {
       throw new MojoExecutionException("Missing hda: " + componentHda.getName());
     }
 
-    // get current lib path
+    // TODO: get and process current lib path
     if (!overwriteClasspath) {
 
     }
