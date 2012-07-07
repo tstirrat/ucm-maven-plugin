@@ -53,7 +53,7 @@ abstract class AbstractServerAwareMojo extends AbstractComponentMojo {
       server = servers.get(0);
       getLog()
           .info(
-              "No server specified, using first (" + server.getId() + "):" + server.getUsername() + " @ "
+              "No server specified, using first (" + server.getId() + "): " + server.getUsername() + " @ "
                   + server.getUrl());
     }
 

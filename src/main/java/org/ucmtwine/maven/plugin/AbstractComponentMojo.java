@@ -25,7 +25,7 @@ abstract class AbstractComponentMojo extends AbstractMojo {
   /**
    * The component zip path, relative to the root of the project.
    * 
-   * @parameter expression="${project.basedir}/${componentZip}"
+   * @parameter
    */
   protected File componentZip;
 
