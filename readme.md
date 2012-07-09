@@ -36,6 +36,7 @@ In your project's pom.xml:
       <groupId>org.ucmtwine</groupId>
       <artifactId>ucm-maven-plugin</artifactId>
       <version>1.0.0-SNAPSHOT</version>
+      <configuration>
         <servers>
           <server>
             <id>dev</id>
