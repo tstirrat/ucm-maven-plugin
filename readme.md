@@ -58,6 +58,7 @@ In your project's pom.xml:
 Optional parameters (defaults shown)
 
 ```xml
+    <plugin>
       <configuration>
         <!-- for ucm:classpath -->
         <libFolder>lib</libFolder>
@@ -67,6 +68,21 @@ Optional parameters (defaults shown)
         <componentName></componentName><!-- Overrides componentName, autodetected by default -->
         <componentZip></componentZip><!-- Overrides zip, defaults to <componentName>.zip -->
       </configuration>
+```
+
+You can execute the build command on each maven install:
+
+```xml
+    <plugin>
+      <executions>
+      	<execution>
+      		<id>build-zip</id>
+      		<phase>install</phase>
+      		<goals>
+      			<goal>build</goal>
+      		</goals>
+      	</execution>
+      </executions>
 ```
 
 Installing the plugin
