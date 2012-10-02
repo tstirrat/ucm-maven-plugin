@@ -1,9 +1,9 @@
-Maven UCM Plugin
+UCM Plugin for Maven
 ================
 
 Build, deploy and manage Oracle UCM components directly from maven.
 
-Commands
+Commands (Goals)
 --------
 
 ### build
@@ -30,59 +30,57 @@ Configuration
 In your project's pom.xml:
 
 ```xml
-<build>
-  <plugins>
-    <plugin>
-      <groupId>org.ucmtwine</groupId>
-      <artifactId>ucm-maven-plugin</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
-      <configuration>
-        <servers>
-          <server>
-            <id>dev</id>
-            <url>http://dev.host.name/cs/idcplg</url>
-            <username>sysadmin</username>
-            <password>idc</password>
-          </server>
-          <server>
-            <id>test</id>
-            <url>http://test.host.name/cs/idcplg</url>
-            <username>weblogic</username>
-            <password>weblogic1</password>
-          </server>
-        </servers>
-      </configuration>
-    </plugin>
+<plugin>
+  <groupId>org.ucmtwine</groupId>
+  <artifactId>ucm-maven-plugin</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <configuration>
+    <servers>
+      <server>
+        <id>dev</id>
+        <url>http://dev.host.name/cs/idcplg</url>
+        <username>sysadmin</username>
+        <password>idc</password>
+      </server>
+      <server>
+        <id>test</id>
+        <url>http://test.host.name/cs/idcplg</url>
+        <username>weblogic</username>
+        <password>weblogic1</password>
+      </server>
+    </servers>
+  </configuration>
+</plugin>
 ```
 
 Optional parameters (defaults shown)
 
 ```xml
-    <plugin>
-      <configuration>
-        <!-- for ucm:classpath -->
-        <libFolder>lib</libFolder>
-        <includeScope>runtime</includeScope>
-        <excludeScope>provided</excludeScope>
-        <!-- for ucm:deploy or ucm:build -->
-        <componentName></componentName><!-- Overrides componentName, autodetected by default -->
-        <componentZip></componentZip><!-- Overrides zip, defaults to <componentName>.zip -->
-      </configuration>
+<!-- plugin -->
+  <configuration>
+    <!-- for ucm:classpath -->
+    <libFolder>lib</libFolder>
+    <includeScope>runtime</includeScope>
+    <excludeScope>provided</excludeScope>
+    <!-- for ucm:deploy or ucm:build -->
+    <componentName></componentName><!-- Overrides componentName, autodetected by default -->
+    <componentZip></componentZip><!-- Overrides zip, defaults to <componentName>.zip -->
+  </configuration>
 ```
 
 You can execute the build command on each maven install:
 
 ```xml
-    <plugin>
-      <executions>
-      	<execution>
-      		<id>build-zip</id>
-      		<phase>install</phase>
-      		<goals>
-      			<goal>build</goal>
-      		</goals>
-      	</execution>
-      </executions>
+<!-- plugin -->
+  <executions>
+  	<execution>
+  		<id>build-zip</id>
+  		<phase>install</phase>
+  		<goals>
+  			<goal>build</goal>
+  		</goals>
+  	</execution>
+  </executions>
 ```
 
 Installing the plugin
