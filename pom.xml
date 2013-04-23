@@ -54,9 +54,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>oracle-ucm</groupId>
+			<groupId>com.oracle.ucm</groupId>
 			<artifactId>ridc</artifactId>
-			<version>11.1.1</version>
+			<version>[11.1.1,12.0.0.0)</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-httpclient</groupId>

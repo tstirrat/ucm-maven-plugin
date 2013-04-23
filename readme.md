@@ -94,7 +94,7 @@ Until this is up on Maven central, you need to install into your local repositor
 1. Install RIDC into your local maven repo
 
   ```
-  mvn install:install-file -DgroupId=oracle-ucm -DartifactId=ridc -Dpackaging=jar -Dversion=11.1.1 -Dfile=oracle.ucm.ridc-11.1.1.jar -DgeneratePom=true
+  mvn install:install-file -DgroupId=com.oracle.ucm -DartifactId=ridc -Dpackaging=jar -Dversion=11.1.1 -Dfile=oracle.ucm.ridc-11.1.1.jar -DgeneratePom=true
   ```
 
 1. Download ucm-maven-plugin-1.0.0-SNAPSHOT.jar from the downloads section
