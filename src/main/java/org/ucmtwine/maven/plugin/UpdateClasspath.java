@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -122,9 +123,11 @@ public class UpdateClasspath extends AbstractComponentMojo {
 
     SortedSet<String> classPathItems = getExistingClassPath();
 
+    Set<Artifact> deps = project.getDependencyArtifacts();
+
     try {
 
-      ArtifactFilter artifactFilter = new ScopeArtifactFilter(null);
+      ArtifactFilter artifactFilter = new ScopeArtifactFilter(Artifact.SCOPE_RUNTIME);
 
       DependencyNode rootNode = treeBuilder.buildDependencyTree(project, localRepository, artifactFactory,
           artifactMetadataSource, artifactFilter, artifactCollector);
@@ -145,7 +148,9 @@ public class UpdateClasspath extends AbstractComponentMojo {
           scope = "runtime";
         }
 
-        if (artifact != null && state == DependencyNode.INCLUDED && !scope.equalsIgnoreCase(excludeScope)) {
+        if (artifact != null && artifact.getArtifactHandler().getPackaging().equalsIgnoreCase("jar")
+            && state == DependencyNode.INCLUDED && !scope.equalsIgnoreCase(excludeScope)
+            && !scope.equalsIgnoreCase("test")) {
           StringBuilder sb = new StringBuilder(classPathRoot);
           sb.append(artifact.getArtifactId()).append("-").append(artifact.getVersion());
           sb.append(".").append(artifact.getArtifactHandler().getExtension());
