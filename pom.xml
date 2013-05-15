@@ -3,7 +3,7 @@
 
 	<groupId>org.ucmtwine</groupId>
 	<artifactId>ucm-maven-plugin</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>Oracle UCM Maven Plugin</name>
@@ -16,7 +16,7 @@
 
 	<scm>
 		<developerConnection>scm:git:https://github.com/tstirrat/ucm-maven-plugin.git</developerConnection>
-	  <tag>v0.0.1</tag>
+	  <tag>HEAD</tag>
   </scm>
 
 	<distributionManagement>
