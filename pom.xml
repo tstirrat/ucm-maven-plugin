@@ -16,7 +16,7 @@
 	</properties>
 
 	<scm>
-		<developerConnection>scm:git:git@github.com:tstirrat/ucm-maven-plugin.git</developerConnection>
+		<developerConnection>scm:git:https://github.com/tstirrat/ucm-maven-plugin.git</developerConnection>
 	</scm>
 
 	<distributionManagement>
@@ -53,7 +53,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-release-plugin</artifactId>
-				<version>2.3.2</version>
+				<version>2.4.1</version>
 				<configuration>
 					<useReleaseProfile>false</useReleaseProfile>
 					<tagNameFormat>v@{project.version}</tagNameFormat>
