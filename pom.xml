@@ -4,7 +4,7 @@
 
 	<groupId>org.ucmtwine</groupId>
 	<artifactId>ucm-maven-plugin</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>0.0.1-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>Oracle UCM Maven Plugin</name>
@@ -14,6 +14,23 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+
+	<scm>
+		<developerConnection>scm:git:git@github.com:tstirrat/ucm-maven-plugin.git</developerConnection>
+	</scm>
+
+	<distributionManagement>
+		<repository>
+			<id>nexus</id>
+			<name>Leighton Nexus (DEV)</name>
+			<url>http://lc23lmsdweb1.lc.local:8081/nexus/content/repositories/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>nexus</id>
+			<name>Leighton Nexus (DEV)</name>
+			<url>http://lc23lmsdweb1.lc.local:8081/nexus/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 	<build>
 		<plugins>
@@ -43,10 +60,10 @@
 			<version>2.0</version>
 		</dependency>
 		<dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-project</artifactId>
-            <version>2.2.1</version>
-        </dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-project</artifactId>
+			<version>2.2.1</version>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

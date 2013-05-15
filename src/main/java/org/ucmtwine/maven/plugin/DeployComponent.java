@@ -78,8 +78,6 @@ public class DeployComponent extends AbstractServerAwareMojo {
 
       DataBinder responseBinder = response.getResponseAsBinder();
 
-      getLog().debug(responseBinder.toString());
-
       // 2. UPLOAD_NEW_COMPONENT
 
       // pass through component location and name to next service
@@ -93,8 +91,6 @@ public class DeployComponent extends AbstractServerAwareMojo {
       response = idcClient.sendRequest(userContext, binder);
 
       responseBinder = response.getResponseAsBinder();
-
-      getLog().debug(responseBinder.toString());
 
       // 3. ENABLE COMP.
       // TODO: enable component
