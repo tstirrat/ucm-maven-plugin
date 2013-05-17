@@ -78,7 +78,7 @@ public class BuildComponent extends AbstractComponentMojo {
     for (Iterator<String> i = zipListing.keySet().iterator(); i.hasNext();) {
       String fileSystemPath = i.next();
       String zipPath = zipListing.get(fileSystemPath);
-      getLog().info("  " + String.format("%-60s", fileSystemPath) + " -> " + zipPath);
+      getLog().info("  " + zipPath);
 
       try {
         addFileToZip(zipStream, new File(fileSystemPath), zipPath);
@@ -154,7 +154,7 @@ public class BuildComponent extends AbstractComponentMojo {
     FilenameFilter filter = getFileFilter();
 
     for (File entry : fileSystemPath.listFiles(filter)) {
-      String newZipPath = zipPath + File.separator + entry.getName();
+      String newZipPath = zipPath + "/" + entry.getName();
       if (entry.isDirectory()) {
         addFolderToZip(zipStream, entry, newZipPath);
       } else {
@@ -244,7 +244,7 @@ public class BuildComponent extends AbstractComponentMojo {
       addResourcesToZipList(zipListing, componentHdaFile);
     }
 
-    zipListing.put(".." + File.separator + location, "component" + File.separator + location);
+    zipListing.put(".." + File.separator + location, "component/" + location);
   }
 
   /**
@@ -264,7 +264,7 @@ public class BuildComponent extends AbstractComponentMojo {
     }
 
     String baseFileSystemPath = ".." + File.separator + componentName + File.separator;
-    String baseZipPath = "component" + File.separator + componentName + File.separator;
+    String baseZipPath = "component/" + componentName + "/";
 
     // read ResourceDefinition from hda file.
     DataResultSet componentResources = getResultSetFromHda(componentHdaFile, "ResourceDefinition");
