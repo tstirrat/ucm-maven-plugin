@@ -1,39 +1,62 @@
 package org.ucmtwine.maven.plugin;
 
+import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.element;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.executeMojo;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.goal;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.name;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.plugin;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactCollector;
-import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
-import org.apache.maven.artifact.resolver.filter.ScopeArtifactFilter;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.dependency.tree.DependencyNode;
-import org.apache.maven.shared.dependency.tree.DependencyTreeBuilder;
-import org.apache.maven.shared.dependency.tree.DependencyTreeBuilderException;
-import org.apache.maven.shared.dependency.tree.traversal.CollectingDependencyNodeVisitor;
 
 /**
  * Update the component classpath to include the project's dependencies, if they
  * have changed.
  * 
  * @goal classpath
+ * @requiresDependencyResolution compile
  */
 public class UpdateClasspath extends AbstractComponentMojo {
+
+  /**
+   * The project currently being build.
+   * 
+   * @parameter expression="${project}"
+   * @required
+   * @readonly
+   */
+  private MavenProject project;
+
+  /**
+   * The current Maven session.
+   * 
+   * @parameter expression="${session}"
+   * @required
+   * @readonly
+   */
+  private MavenSession session;
+
+  /**
+   * The Maven BuildPluginManager component.
+   * 
+   * @component
+   * @required
+   */
+  private BuildPluginManager pluginManager;
 
   /**
    * Overwrite classpath?
@@ -53,48 +76,6 @@ public class UpdateClasspath extends AbstractComponentMojo {
    * @parameter default-value="lib"
    */
   private String libFolder;
-
-  /**
-   * @component
-   * @required
-   * @readonly
-   */
-  private ArtifactFactory artifactFactory;
-
-  /**
-   * @component
-   * @required
-   * @readonly
-   */
-  private ArtifactMetadataSource artifactMetadataSource;
-
-  /**
-   * @component
-   * @required
-   * @readonly
-   */
-  private ArtifactCollector artifactCollector;
-
-  /**
-   * @component
-   * @required
-   * @readonly
-   */
-  private DependencyTreeBuilder treeBuilder;
-
-  /**
-   * @parameter default-value="${localRepository}"
-   * @required
-   * @readonly
-   */
-  private ArtifactRepository localRepository;
-
-  /**
-   * @parameter expression="${project}"
-   * @required
-   * @readonly
-   */
-  private MavenProject project;
 
   /**
    * Exclude scope when building classpath
@@ -117,54 +98,43 @@ public class UpdateClasspath extends AbstractComponentMojo {
 
     String classPathRoot = "$COMPONENT_DIR/" + libFolder;
 
-    if (!classPathRoot.endsWith("/")) {
-      classPathRoot += "/";
+    StringBuilder classpath = new StringBuilder();
+
+    if (classPathRoot.endsWith("/")) {
+      classPathRoot = classPathRoot.substring(0, classPathRoot.length() - 2);
     }
 
-    SortedSet<String> classPathItems = getExistingClassPath();
-
-    Set<Artifact> deps = project.getDependencyArtifacts();
-
-    try {
-
-      ArtifactFilter artifactFilter = new ScopeArtifactFilter(Artifact.SCOPE_RUNTIME);
-
-      DependencyNode rootNode = treeBuilder.buildDependencyTree(project, localRepository, artifactFactory,
-          artifactMetadataSource, artifactFilter, artifactCollector);
-
-      CollectingDependencyNodeVisitor visitor = new CollectingDependencyNodeVisitor();
-
-      rootNode.accept(visitor);
-
-      @SuppressWarnings("unchecked")
-      List<DependencyNode> nodes = visitor.getNodes();
-      for (DependencyNode dependencyNode : nodes) {
-        int state = dependencyNode.getState();
-        Artifact artifact = dependencyNode.getArtifact();
-
-        String scope = artifact.getScope();
-
-        if (scope == null) {
-          scope = "runtime";
-        }
-
-        if (artifact != null && artifact.getArtifactHandler().getPackaging().equalsIgnoreCase("jar")
-            && state == DependencyNode.INCLUDED && !scope.equalsIgnoreCase(excludeScope)
-            && !scope.equalsIgnoreCase("test")) {
-          StringBuilder sb = new StringBuilder(classPathRoot);
-          sb.append(artifact.getArtifactId()).append("-").append(artifact.getVersion());
-          sb.append(".").append(artifact.getArtifactHandler().getExtension());
-
-          classPathItems.add(sb.toString());
-        }
-      }
-
-    } catch (DependencyTreeBuilderException e) {
-      // TODO handle exception
-      e.printStackTrace();
+    // add this artifact, if its a jar type
+    if (project.getPackaging().equalsIgnoreCase("jar")) {
+      classpath.append(classPathRoot).append("/").append(project.getArtifactId()).append("-")
+          .append(project.getVersion()).append(".jar;");
     }
 
-    writeClassPath(classPathItems);
+    // @formatter:off
+    executeMojo(
+        plugin("org.apache.maven.plugins", "maven-dependency-plugin", "2.8"),
+        goal("build-classpath"),
+        configuration(
+            element(name("prefix"), classPathRoot),
+            element(name("fileSeparator"), "/"),
+            element(name("pathSeparator"), ";"),
+            element(name("includeScope"), includeScope),
+            element(name("excludeScope"), excludeScope),
+            element(name("outputProperty"), "componentClassPath")
+        ), 
+        executionEnvironment(project, session, pluginManager));
+    // @formatter:on
+
+    String mojoClassPath = project.getProperties().getProperty("componentClassPath");
+
+    if (mojoClassPath != null) {
+      classpath.append(mojoClassPath);
+    }
+
+    String finalClassPath = classpath.toString();
+
+    // TODO: need only update classpath if it has changed!
+    writeClassPath(finalClassPath);
   }
 
   /**
@@ -173,14 +143,9 @@ public class UpdateClasspath extends AbstractComponentMojo {
    * @param classPathItems
    * @throws MojoExecutionException
    */
-  private void writeClassPath(SortedSet<String> classPathItems) throws MojoExecutionException {
-    StringBuilder sb = new StringBuilder();
+  private void writeClassPath(String classpath) throws MojoExecutionException {
 
-    for (Iterator<String> i = classPathItems.iterator(); i.hasNext();) {
-      sb.append(i.next()).append(";");
-    }
-
-    getLog().info("New classpath: " + sb.toString());
+    getLog().info("New classpath: " + classpath);
 
     File hdaFile = new File(componentName + ".hda");
 
@@ -189,7 +154,7 @@ public class UpdateClasspath extends AbstractComponentMojo {
     }
 
     try {
-      replaceClassPath(sb.toString(), hdaFile);
+      replaceClassPath(classpath, hdaFile);
 
     } catch (IOException e) {
       // TODO Auto-generated catch block
@@ -232,6 +197,7 @@ public class UpdateClasspath extends AbstractComponentMojo {
     }
   }
 
+  @SuppressWarnings("unused")
   private SortedSet<String> getExistingClassPath() throws MojoExecutionException {
     SortedSet<String> items = new TreeSet<String>();
 
