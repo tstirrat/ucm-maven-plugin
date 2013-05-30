@@ -1,7 +1,13 @@
 package org.ucmtwine.maven.plugin;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -52,6 +58,42 @@ abstract class AbstractComponentMojo extends AbstractMojo {
   protected void determineComponentName() throws MojoExecutionException {
     // if componentName passed, nothing to do
     if (componentName == null || componentName.length() == 0) {
+
+      // 2. manifest.hda -> ComponentName=XXXX
+      File file = new File("manifest.hda");
+      BufferedReader br = null;
+
+      try {
+        br = new BufferedReader(new FileReader(file));
+        String line;
+        while ((line = br.readLine()) != null) {
+          if (line.startsWith("ComponentName")) {
+            getLog().debug("Found component name row: " + line);
+            Pattern pattern = Pattern.compile("ComponentName=(\\w+)");
+            Matcher matcher = pattern.matcher(line);
+            if (matcher.find()) {
+              componentName = matcher.group(1);
+              getLog().debug("Found component name in manifest: " + componentName);
+            }
+          }
+        }
+      } catch (FileNotFoundException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+
+      } finally {
+        if (br != null) {
+          try {
+            br.close();
+          } catch (IOException e) {
+
+          }
+        }
+      }
 
       // 2. If <DirName>.hda exists
       if (baseDir != null && new File(baseDir.getName() + ".hda").exists()) {

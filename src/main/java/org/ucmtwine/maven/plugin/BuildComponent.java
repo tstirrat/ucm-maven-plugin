@@ -49,16 +49,19 @@ public class BuildComponent extends AbstractComponentMojo {
 
   public void execute() throws MojoExecutionException, MojoFailureException {
 
+    determineComponentName();
+    determineComponentZip();
+
     DataResultSet manifestRs = getResultSetFromHda(manifestFile, "Manifest");
 
     ZipOutputStream zipStream;
 
     Map<String, String> zipListing = new TreeMap<String, String>();
 
+    zipListing.put("manifest.hda", "manifest.hda");
     for (DataObject row : manifestRs.getRows()) {
       addToZipList(zipListing, row);
     }
-    zipListing.put("manifest.hda", "manifest.hda");
 
     if (componentName == null) {
       throw new MojoExecutionException("No component name specified or auto detected");
@@ -237,14 +240,19 @@ public class BuildComponent extends AbstractComponentMojo {
     String entryType = manifestEntry.get("entryType");
     String location = manifestEntry.get("location");
 
-    if (entryType.equals("component")) {
-
-      File componentHdaFile = new File(".." + File.separator + location);
-
-      addResourcesToZipList(zipListing, componentHdaFile);
+    // remove component dir prefix
+    if (location.startsWith(componentName)) {
+      location = location.replaceFirst(componentName + "/", "");
     }
 
-    zipListing.put(".." + File.separator + location, "component/" + location);
+    zipListing.put(location, "component/" + componentName + "/" + location);
+
+    if (entryType.equals("component")) {
+
+      File componentHdaFile = new File(location);
+
+      addComponentResourcesToZipList(zipListing, componentHdaFile);
+    }
   }
 
   /**
@@ -254,7 +262,7 @@ public class BuildComponent extends AbstractComponentMojo {
    * @param componentHdaFile
    * @throws MojoExecutionException
    */
-  private void addResourcesToZipList(Map<String, String> zipListing, File componentHdaFile)
+  private void addComponentResourcesToZipList(Map<String, String> zipListing, File componentHdaFile)
       throws MojoExecutionException {
     String componentName = componentHdaFile.getName().replaceAll(".hda", "");
 
@@ -263,7 +271,6 @@ public class BuildComponent extends AbstractComponentMojo {
       this.componentName = componentName;
     }
 
-    String baseFileSystemPath = ".." + File.separator + componentName + File.separator;
     String baseZipPath = "component/" + componentName + "/";
 
     // read ResourceDefinition from hda file.
@@ -277,9 +284,9 @@ public class BuildComponent extends AbstractComponentMojo {
       // folder.
       if (type != null && type.equals("template")) {
         String templateFolder = new File(fileName).getParent();
-        zipListing.put(baseFileSystemPath + templateFolder, baseZipPath + templateFolder);
+        zipListing.put(templateFolder, baseZipPath + templateFolder);
       } else {
-        zipListing.put(baseFileSystemPath + fileName, baseZipPath + fileName);
+        zipListing.put(fileName, baseZipPath + fileName);
       }
     }
   }
