@@ -7,6 +7,7 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.goal;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.name;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.plugin;
+import static org.ucmtwine.maven.plugin.FileUpdateHelper.replaceLine;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -17,195 +18,175 @@ import java.io.PrintWriter;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import oracle.stellent.ridc.model.DataObject;
+import oracle.stellent.ridc.model.DataResultSet;
+
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 /**
- * Update the component classpath to include the project's dependencies, if they
- * have changed.
- * 
- * @goal classpath
- * @requiresDependencyResolution compile
+ * Update the component classpath to include the project's dependencies,
+ * if they have changed.
  */
-public class UpdateClasspath extends AbstractComponentMojo {
-
-  /**
-   * The project currently being build.
-   * 
-   * @parameter expression="${project}"
-   * @required
-   * @readonly
-   */
-  private MavenProject project;
-
-  /**
-   * The current Maven session.
-   * 
-   * @parameter expression="${session}"
-   * @required
-   * @readonly
-   */
-  private MavenSession session;
-
-  /**
-   * The Maven BuildPluginManager component.
-   * 
-   * @component
-   * @required
-   */
-  private BuildPluginManager pluginManager;
-
+@Mojo(name = "classpath", 
+      defaultPhase = LifecyclePhase.PROCESS_RESOURCES,
+      requiresDependencyResolution = ResolutionScope.COMPILE)
+//@Execute(goal = "compile", phase = LifecyclePhase.COMPILE)
+public class UpdateClasspath extends AbstractLibMojo
+{
+   /** Classpath separator used on Linux/Unix Systems */
+   private static final char UNIX_SEPARATOR = ':';
+   
+   /** Classpath separator used on Windows */
+   private static final char WIN_SEPARATOR = ';';
+   
+   /** Default Separator character to use for building the library path. */
+   private static final char SEPARATOR = UNIX_SEPARATOR;
+   
+   /**
+    * Gets the a String of the char for separating lib paths
+    * TODO: make configurable
+    * @return a String representation of the Library Path Separator character  
+    */
+   private static String getSeparator()
+   { return Character.toString(SEPARATOR); }
+      
   /**
    * Overwrite classpath?
-   * 
+   *
    * If true, the entire classpath will be rewritten with maven dependencies.
-   * 
+   *
    * If false (default) only new dependencies will be appended if missing.
-   * 
-   * @parameter expression="${overwriteClasspath}" default-value="true"
+   *
+   * @parameter property="overwriteClasspath" default-value="true"
    */
   private boolean overwriteClasspath;
 
-  /**
-   * The relative path to the folder where your libraries are kept. Defaults to
-   * "lib".
-   * 
-   * @parameter default-value="lib"
-   */
-  private String libFolder;
+  public void execute() throws MojoExecutionException, MojoFailureException
+  {
+     // find componentName
+     determineComponentName();
 
-  /**
-   * Exclude scope when building classpath
-   * 
-   * @parameter default-value="provided"
-   */
-  private String excludeScope;
+     //String classPathRoot = "$COMPONENT_DIR/" + componentLibFolder;
+     String ComponentPrefix = "$COMPONENT_DIR";
+     if ( componentLibFolder.charAt(0) != '/'  ) { ComponentPrefix += "/"; }
+     String classPathRoot = ComponentPrefix + componentLibFolder;
+     StringBuilder classpath = new StringBuilder();
 
-  /**
-   * Include this scope when building classpath
-   * 
-   * @parameter default-value="runtime"
-   */
-  private String includeScope;
+     if (classPathRoot.endsWith("/"))
+     { classPathRoot = classPathRoot.substring(0, classPathRoot.length() - 2); }
 
-  public void execute() throws MojoExecutionException, MojoFailureException {
+     //add Classes Directory from Manifest.hda
+     DataResultSet manifestRs = getResultSetFromHda(getManifestFile(), "Manifest");
 
-    // find componentName
-    determineComponentName();
+     for ( DataObject row : manifestRs.getRows() )
+     {
+        String entryType = row.get("entryType");
+        if ( "componentClasses".equals(entryType) )
+        {
+           String dir = row.get("location");
+           if ( dir.startsWith(componentName) )
+           { dir = dir.substring(componentName.length() + 1); }
+           if ( dir.charAt(0) == '/' ) { dir = dir.substring(1); }
+           classpath.append("$COMPONENT_DIR/").append(dir).append(getSeparator()); 
+        }
+     }
 
-    String classPathRoot = "$COMPONENT_DIR/" + libFolder;
+     String finalClassPath = classpath.toString();
 
-    StringBuilder classpath = new StringBuilder();
+     String libClasspath = appendLibrariesToClasspath(classPathRoot, classpath);
+     finalClassPath = libClasspath;
 
-    if (classPathRoot.endsWith("/")) {
-      classPathRoot = classPathRoot.substring(0, classPathRoot.length() - 2);
-    }
+     // TODO: need only update classpath if it has changed!
+     writeClassPath(finalClassPath);
+  }
 
-    // add this artifact, if its a jar type
-    if (project.getPackaging().equalsIgnoreCase("jar")) {
-      classpath.append(classPathRoot).append("/").append(project.getArtifactId()).append("-")
-          .append(project.getVersion()).append(".jar;");
-    }
+  @SuppressWarnings("unused")
+  private String appendLibrariesToClasspath(String classPathRoot,
+                                            StringBuilder classpath)
+          throws MojoExecutionException
+  {
+     // add this artifact, if its a jar type
+     if (project.getPackaging().equalsIgnoreCase("jar"))
+     {
+       classpath.append(classPathRoot).append("/").append(project.getArtifactId())
+                .append("-").append(project.getVersion()).append(".jar;");
+     }
 
-    // @formatter:off
-    executeMojo(
-        plugin("org.apache.maven.plugins", "maven-dependency-plugin", "2.8"),
-        goal("build-classpath"),
-        configuration(
-            element(name("prefix"), classPathRoot),
-            element(name("fileSeparator"), "/"),
-            element(name("pathSeparator"), ";"),
-            element(name("includeScope"), includeScope),
-            element(name("excludeScope"), excludeScope),
-            element(name("outputProperty"), "componentClassPath")
-        ), 
-        executionEnvironment(project, session, pluginManager));
-    // @formatter:on
+     getLog().debug("prefix(classPathRoot): " + classPathRoot);
 
-    String mojoClassPath = project.getProperties().getProperty("componentClassPath");
+     // @formatter:off
+     executeMojo(
+         plugin("org.apache.maven.plugins", "maven-dependency-plugin", "2.10"),
+         goal("build-classpath"),
+         configuration(
+             element(name("prefix"),         classPathRoot),
+             element(name("fileSeparator"),  "/"),
+             element(name("pathSeparator"),  getSeparator()),
+             element(name("includeScope"),   includeScope),
+             element(name("excludeScope"),   excludeScope),
+             element(name("outputProperty"), "componentClassPath")
+         ),
+         executionEnvironment(project, session, pluginManager));
+     // @formatter:on
 
-    if (mojoClassPath != null) {
-      classpath.append(mojoClassPath);
-    }
+     String mojoClassPath = project.getProperties()
+                                   .getProperty("componentClassPath");
 
-    String finalClassPath = classpath.toString();
+     if (mojoClassPath != null) { classpath.append(mojoClassPath); }
 
-    // TODO: need only update classpath if it has changed!
-    writeClassPath(finalClassPath);
+     return classpath.toString();
   }
 
   /**
    * Writes the classpath to the hda file.
-   * 
+   *
    * @param classPathItems
    * @throws MojoExecutionException
    */
-  private void writeClassPath(String classpath) throws MojoExecutionException {
-
+  private void writeClassPath(String classpath) throws MojoExecutionException
+  {
     getLog().info("New classpath: " + classpath);
 
     File hdaFile = new File(componentName + ".hda");
 
-    if (!hdaFile.exists()) {
-      throw new MojoExecutionException("Hda file does not exist: " + hdaFile.toString());
-    }
+    if (!hdaFile.exists())
+    { throw new MojoExecutionException("Hda file does not exist: " + hdaFile.toString()); }
 
-    try {
-      replaceClassPath(classpath, hdaFile);
-
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+    try { replaceClassPath(classpath, hdaFile); }
+    catch (IOException ioe)
+    { getLog().warn("Error replacing manifest classpath entry.", ioe); }
   }
 
-  private void replaceClassPath(String newClassPath, File hdaFile) throws IOException, MojoExecutionException {
-
-    File tempFile = new File("temp.hda");
-
-    BufferedReader reader = new BufferedReader(new FileReader(hdaFile));
-    PrintWriter writer = new PrintWriter(new FileWriter(tempFile, false));
-    String line = null;
-
-    while ((line = reader.readLine()) != null) {
-      if (line.startsWith("classpath=")) {
-        writer.println("classpath=" + newClassPath);
-      } else {
-        writer.println(line);
-      }
-    }
-
-    reader.close();
-    writer.flush();
-    writer.close();
-
-    File oldFile = new File("old.hda");
-
-    if (oldFile.exists()) {
-      oldFile.delete();
-    }
-
-    if (!hdaFile.renameTo(oldFile)) {
-      throw new MojoExecutionException("Unable to rename " + hdaFile.getName() + " to " + oldFile.getName());
-    }
-
-    if (!tempFile.renameTo(hdaFile)) {
-      throw new MojoExecutionException("Unable to rename " + tempFile.getName() + " to " + hdaFile.getName());
-    }
+  private void replaceClassPath(String newClassPath, File hdaFile)
+          throws IOException, MojoExecutionException
+  {
+     if ( null != newClassPath && newClassPath.endsWith(getSeparator()) )
+     { newClassPath = newClassPath.substring(0, newClassPath.length()-1); }
+     if ( null != newClassPath && newClassPath.endsWith("/") )
+     { newClassPath = newClassPath.substring(0, newClassPath.length()-1); }
+     
+     replaceLine("classpath", newClassPath, hdaFile);
   }
 
   @SuppressWarnings("unused")
-  private SortedSet<String> getExistingClassPath() throws MojoExecutionException {
+  private SortedSet<String> getExistingClassPath() throws MojoExecutionException
+  {
     SortedSet<String> items = new TreeSet<String>();
 
     File componentHda = new File(componentName + ".hda");
 
-    if (!componentHda.exists()) {
-      throw new MojoExecutionException("Missing hda: " + componentHda.getName());
-    }
+    if (!componentHda.exists())
+    { throw new MojoExecutionException("Missing hda: " + componentHda.getName()); }
 
     // TODO: get and process current lib path
     if (!overwriteClasspath) {
@@ -214,4 +195,5 @@ public class UpdateClasspath extends AbstractComponentMojo {
 
     return items;
   }
+
 }
