@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component-set>
+  <components>
+    <component>
+      <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
+      <role-hint>wcc</role-hint>
+      <implementation>
+         org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
+      </implementation>
+      <configuration>
+        <!--
+        <lifecycles>
+          <lifecycle>
+            <id>wcc</id> -->
+            <phases>
+              <initialize>
+                org.ucmtwine:ucm-maven-plugin:init
+              </initialize>
+              <process-resources>
+                org.apache.maven.plugins:maven-resources-plugin:resources
+              </process-resources>
+              <compile>
+                org.apache.maven.plugins:maven-compiler-plugin:compile
+              </compile>
+              <process-classes>
+                org.ucmtwine:ucm-maven-plugin:classpath
+              </process-classes>
+              <process-test-resources>
+                org.apache.maven.plugins:maven-resources-plugin:testResources
+              </process-test-resources>
+              <test-compile>
+                org.apache.maven.plugins:maven-compiler-plugin:testCompile
+              </test-compile>
+              <test>
+                org.apache.maven.plugins:maven-surefire-plugin:test
+              </test>
+              <prepare-package>
+                org.ucmtwine:ucm-maven-plugin:lib,
+                org.ucmtwine:ucm-maven-plugin:update-version
+              </prepare-package>
+              <package>
+                org.ucmtwine:ucm-maven-plugin:build
+              </package>
+              <install>
+                org.apache.maven.plugins:maven-install-plugin:install
+              </install>
+              <deploy>
+                org.ucmtwine:ucm-maven-plugin:deploy
+              </deploy>
+            </phases>
+            <!--
+          </lifecycle>
+        </lifecycles>
+       -->
+      </configuration>
+    </component>
+
+    <component>
+      <role>org.apache.maven.artifact.handler.ArtifactHandler</role>
+      <role-hint>wcc</role-hint>
+      <implementation>
+        org.apache.maven.artifact.handler.DefaultArtifactHandler
+      </implementation>
+      <configuration>
+        <!--the extension used by Maven in the repository-->
+        <extension>zip</extension>
+        <!--the type used when specifying dependencies etc.-->
+        <type>wcc</type>
+        <!--the packaging used when declaring an implementation of
+          the packaging-->
+        <packaging>wcc</packaging>
+      </configuration>
+    </component>
+  </components>
+</component-set>
