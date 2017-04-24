@@ -1,3 +1,10 @@
+**Deprectation Notice**
+=======================
+This project has been discontinued and is no longer in activre development.  
+A more up to date version of this project is available at:  [raystorm/ucm-maven-plugin](https://github.com/raystorm/ucm-maven-plugin).
+
+
+
 UCM Plugin for Maven
 ================
 
